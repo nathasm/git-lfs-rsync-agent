@@ -9,17 +9,22 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
 var remote string
+var LFSStorageDir = ".git/lfs"
+var tmpdir = filepath.Join(LFSStorageDir, "tmp")
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	writer := bufio.NewWriter(os.Stdout)
 	errWriter := bufio.NewWriter(os.Stderr)
-
+        
+	os.MkdirAll(tmpdir, 0755)
+	
 	for scanner.Scan() {
 		line := scanner.Text()
 		var req request
@@ -99,7 +104,7 @@ func initAgent(writer, errWriter *bufio.Writer) {
 }
 
 func performDownload(oid string, size int64, a *action, writer, errWriter *bufio.Writer) {
-	dlFile, err := ioutil.TempFile("", "rsync-agent")
+	dlFile, err := ioutil.TempFile(tmpdir, "rsync-agent-")
 	if err != nil {
 		sendTransferError(oid, 3, err.Error(), writer, errWriter)
 		return
